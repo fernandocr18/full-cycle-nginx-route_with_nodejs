@@ -7,7 +7,6 @@ services:
       context: ./node
     container_name: app
     restart: always
-    entrypoint: docker-entrypoint.sh
     command: node index.js
     networks:
       - node-network

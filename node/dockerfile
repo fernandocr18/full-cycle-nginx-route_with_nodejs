@@ -6,6 +6,4 @@ COPY . .
 
 EXPOSE 3000
 
-RUN npm install && \
-    npm install mysql --save && \
-    npm install ejs --save
+RUN npm install
