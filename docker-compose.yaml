@@ -3,21 +3,30 @@ version: '3'
 services:
 
   app:
-    build: 
-      context: ./node
     container_name: app
-    restart: always
-    command: node index.js
+    image: node:15
+    entrypoint: docker-entrypoint.sh
+    volumes:
+      - ./node:/usr/src/app:rw
+    command: sh -c "npm install && node index.js"
+    expose:
+      - 3000
     networks:
       - node-network
     tty: true
     depends_on:
       db:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "ss -tulpn | grep -q 'users:((\"node\",pid'"]
+      interval: 5s
+      timeout: 30s
+      retries: 5
 
   nginx:
     build:
       context: ./nginx
+      dockerfile: dockerfile
     container_name: nodenginx
     restart: always
     ports:
@@ -25,7 +34,8 @@ services:
     networks:
       - node-network
     depends_on:
-      - app
+      app:        
+        condition: service_healthy
 
   db:
     image: mysql:5.7
