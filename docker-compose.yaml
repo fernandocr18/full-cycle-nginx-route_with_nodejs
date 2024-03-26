@@ -4,7 +4,8 @@ services:
 
   app:
     container_name: app
-    image: node:15
+    build: 
+      context: ./node
     entrypoint: docker-entrypoint.sh
     volumes:
       - ./node:/usr/src/app:rw
@@ -17,11 +18,6 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    healthcheck:
-      test: ["CMD-SHELL", "ss -tulpn | grep -q 'users:((\"node\",pid'"]
-      interval: 5s
-      timeout: 30s
-      retries: 5
 
   nginx:
     build:
@@ -34,18 +30,17 @@ services:
     networks:
       - node-network
     depends_on:
-      app:        
-        condition: service_healthy
+      - app
 
   db:
     image: mysql:5.7
-    command: --innodb-use-native-aio=0 --init-file /data/application/init.sql
     container_name: db
     restart: always
     tty: true
+    user: root
     volumes:
-      - ./mysqldb:/var/lib/mysql
-      - ./mysql/init.sql:/data/application/init.sql
+      - mysql:/var/lib/mysql:rw
+      - ./mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
     environment:
       - MYSQL_DATEBASE=nodedb
       - MYSQL_ROOT_PASSWORD=root
@@ -60,3 +55,7 @@ services:
 networks:
   node-network:
     driver: bridge
+
+volumes:
+  mysql:
+    driver: local
